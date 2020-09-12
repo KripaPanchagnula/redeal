@@ -17,10 +17,12 @@ try:
 except ImportError:
     BRIGHT_GREEN = BRIGHT_RED = RESET_ALL = ""
 
-from . import dds, util
-from .global_defs import Card, Rank, Seat, Strain, Suit, FULL_DECK
-from .smartstack import SmartStack
-
+#from . import dds, util
+#from .global_defs import Card, Rank, Seat, Strain, Suit, FULL_DECK
+#from .smartstack import SmartStack
+import dds, util
+from global_defs import Card, Rank, Seat, Strain, Suit, FULL_DECK
+from smartstack import SmartStack
 
 __all__ = ["Shape", "balanced", "semibalanced",
            "Evaluator", "hcp", "qp", "controls",

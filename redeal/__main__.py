@@ -4,7 +4,10 @@ import inspect
 import random
 import runpy
 
-from . import global_defs, redeal, util
+#from . import global_defs, redeal, util
+import global_defs
+import redeal
+import util
 
 
 class Main:
