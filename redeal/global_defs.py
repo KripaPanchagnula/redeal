@@ -11,7 +11,6 @@ Seat.__str__ = lambda self: self._s
 Seat.__index__ = lambda self: self.value
 Seat.__add__ = lambda self, val: Seat((self.value + val) % len(Seat))
 
-
 class Suit(Enum):
     S = 0, " S", "♠"
     H = 1, " H", "♡"
