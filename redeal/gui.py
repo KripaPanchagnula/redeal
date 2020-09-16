@@ -39,8 +39,9 @@ class Application(tk.Frame):
         # create widgets
         # configurables, #1
         frame = tk.Frame(self)
-        self.format = ttk.Combobox(frame, values=["short", "long", "pbn"],
-                                   text="long output for diagrams")
+        self.format = ttk.Combobox(
+            frame, values=["short", "long", "pbn"], text="long output for diagrams"
+        )
         self.format.set("short")
         self.format.pack(side=tk.LEFT)
         frame.pack(side=tk.TOP)
@@ -48,17 +49,22 @@ class Application(tk.Frame):
         tk.Label(frame, text="RNG seed").pack(side=tk.LEFT)
         seed = tk.Entry(frame, width=8)
         seed.pack(side=tk.LEFT)
-        (tk.Button(frame, text="Reseed",
-                   command=lambda: random.seed(int(seed.get())))
-         .pack(side=tk.LEFT))
+        (
+            tk.Button(
+                frame, text="Reseed", command=lambda: random.seed(int(seed.get()))
+            ).pack(side=tk.LEFT)
+        )
         frame.pack(side=tk.TOP)
         # configurables, #2
-        for dest, text in [("n", "Number of requested deals:"),
-                           ("max", "Maximum number of tries:")]:
+        for dest, text in [
+            ("n", "Number of requested deals:"),
+            ("max", "Maximum number of tries:"),
+        ]:
             frame = tk.Frame(self)
             tk.Label(frame, text=text).pack(side=tk.LEFT)
-            spinbox = tk.Spinbox(frame, from_=0, to=sys.maxsize,
-                                 width=self.spinbox_width)
+            spinbox = tk.Spinbox(
+                frame, from_=0, to=sys.maxsize, width=self.spinbox_width
+            )
             spinbox.delete(0)
             spinbox.insert(tk.END, str(getattr(self.main.args, dest)))
             spinbox.pack(side=tk.LEFT)
@@ -74,8 +80,8 @@ class Application(tk.Frame):
             self.seats[seat].pack(side=tk.TOP)
             self.seat_entries[seat] = seat_entry = tk.Entry(inner, width=16)
             seat_entry.insert(
-                tk.END,
-                self.main.predeal.get(seat, redeal.H("- - - -")).to_str())
+                tk.END, self.main.predeal.get(seat, redeal.H("- - - -")).to_str()
+            )
             seat_entry.pack(side=tk.TOP)
             inner.pack(side=tk.LEFT)
         frame.pack(side=tk.TOP)
@@ -86,8 +92,9 @@ class Application(tk.Frame):
         frame = tk.Frame(self)
         self.run_button = tk.Button(frame, text="Run", command=self.run)
         self.run_button.pack(side=tk.LEFT)
-        self.stop_button = tk.Button(frame, text="Stop", command=self.stop,
-                                     state=tk.DISABLED)
+        self.stop_button = tk.Button(
+            frame, text="Stop", command=self.stop, state=tk.DISABLED
+        )
         self.stop_button.pack(side=tk.LEFT)
         tk.Button(frame, text="Clear", command=self.clear).pack(side=tk.LEFT)
         tk.Button(frame, text="Quit", command=self.quit).pack(side=tk.LEFT)
@@ -96,8 +103,11 @@ class Application(tk.Frame):
         inner, self.out = scrolled_text(self, height=self.out_text_height)
         inner.pack(side=tk.TOP)
         # copyright
-        (tk.Label(self, text=__copyright__, relief=tk.SUNKEN).
-         pack(side=tk.BOTTOM, fill=tk.X))
+        (
+            tk.Label(self, text=__copyright__, relief=tk.SUNKEN).pack(
+                side=tk.BOTTOM, fill=tk.X
+            )
+        )
         # end of widget creation
         self.pack()
 
@@ -106,8 +116,8 @@ class Application(tk.Frame):
         proto = f"def {name}{signature_str}:"
         tk.Label(frame, text=proto).pack(side=tk.TOP, anchor="w")
         inner, text = scrolled_text(
-            frame,
-            height=height if height is not None else self.func_text_height)
+            frame, height=height if height is not None else self.func_text_height
+        )
         inner.pack(side=tk.TOP)
         text.insert("end", "\t" + default)
         frame.pack(side=tk.TOP)
@@ -119,8 +129,9 @@ class Application(tk.Frame):
         # override configurables #1
         redeal.Hand.set_str_style(self.format.get())
         redeal.Deal.set_str_style(self.format.get())
-        redeal.Deal.set_print_only([seat for seat in global_defs.Seat
-                                    if self.seats[seat].get_value()])
+        redeal.Deal.set_print_only(
+            [seat for seat in global_defs.Seat if self.seats[seat].get_value()]
+        )
         _verbose = self.main.args.verbose
         self.main.args.verbose = False  # FIXME backspace support in tk text.
         # override configurables #1
@@ -134,10 +145,15 @@ class Application(tk.Frame):
             self.main.predeal[seat] = redeal.H(self.seat_entries[seat].get())
         # override functions
         simulation = type(
-            "", (redeal.Simulation,),
-            {name: util.create_func(
-                redeal, name, signature_str, text.get(1.0, tk.END))
-             for name, signature_str, text in self.texts})()
+            "",
+            (redeal.Simulation,),
+            {
+                name: util.create_func(
+                    redeal, name, signature_str, text.get(1.0, tk.END)
+                )
+                for name, signature_str, text in self.texts
+            },
+        )()
 
         # simulation
         def target():

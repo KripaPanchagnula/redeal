@@ -30,8 +30,7 @@ predeal = {"S": "652 K752 53 9862"}
 # table that keeps track of how often at least one game that makes.
 def initial():
     global TABLE, TABLE2
-    TABLE = Payoff(("pass2N", "bid3N", "stayman", "pstayman", "majorgame"),
-                   matchpoints)
+    TABLE = Payoff(("pass2N", "bid3N", "stayman", "pstayman", "majorgame"), matchpoints)
     TABLE2 = [0, 0]
 
 
@@ -57,20 +56,33 @@ def do(deal):
     bid3N = deal.dd_score("3NN")
     stayman = deal.dd_score("4HN") if len(deal.north.hearts) >= 4 else bid3N
     pstayman = deal.dd_score("4SN") if len(deal.north.spades) == 5 else stayman
-    majorgame = (deal.dd_score("4SN") if len(deal.north.spades) == 5 else
-                 (deal.dd_score("4HN") if len(deal.north.hearts) >= 4 else
-                  (deal.dd_score("4SN") if len(deal.north.spades) == 4 else
-                   bid3N)))
+    majorgame = (
+        deal.dd_score("4SN")
+        if len(deal.north.spades) == 5
+        else (
+            deal.dd_score("4HN")
+            if len(deal.north.hearts) >= 4
+            else (deal.dd_score("4SN") if len(deal.north.spades) == 4 else bid3N)
+        )
+    )
     # Respectively: pass 2N, bid 3N directly, go through Stayman, go through
     # puppet Stayman, and go through Stayman but prefer a 4-3 S fit to 3N.
-    scores = dict(pass2N=pass2N, bid3N=bid3N, stayman=stayman,
-                  pstayman=pstayman, majorgame=majorgame)
+    scores = dict(
+        pass2N=pass2N,
+        bid3N=bid3N,
+        stayman=stayman,
+        pstayman=pstayman,
+        majorgame=majorgame,
+    )
     print(deal, " ".join(str(scores[k]) for k in TABLE.entries))
     # Update the cross-matchpoint table.
     TABLE.add_data(scores)
     # Keep track of how often at least one game makes.
-    if (deal.dd_tricks("4HN") >= 10 or deal.dd_tricks("4SN") >= 10
-            or deal.dd_tricks("3NN") >= 9):
+    if (
+        deal.dd_tricks("4HN") >= 10
+        or deal.dd_tricks("4SN") >= 10
+        or deal.dd_tricks("3NN") >= 9
+    ):
         TABLE2[True] += 1
     else:
         TABLE2[False] += 1

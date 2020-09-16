@@ -3,14 +3,12 @@ from ctypes import POINTER, Structure, byref, c_char, c_int, c_uint
 import os
 import sys
 
-#from .global_defs import Card, Rank, Seat, Strain, Suit
+# from .global_defs import Card, Rank, Seat, Strain, Suit
 from global_defs import Card, Rank, Seat, Strain, Suit
 
 
 def to_c_strain(strain):
-    return {
-        Strain.C: 3, Strain.D: 2, Strain.H: 1, Strain.S: 0, Strain.N: 4,
-    }[strain]
+    return {Strain.C: 3, Strain.D: 2, Strain.H: 1, Strain.S: 0, Strain.N: 4}[strain]
 
 
 def to_suit(suit):
@@ -35,15 +33,18 @@ class Deal(Structure):
 
     @classmethod
     def from_deal(cls, deal, strain, leader):
-        self = cls(trump=to_c_strain(strain),
-                   first=leader.value,
-                   currentTrickSuit=(c_int * 3)(0, 0, 0),
-                   currentTrickRank=(c_int * 3)(0, 0, 0))
+        self = cls(
+            trump=to_c_strain(strain),
+            first=leader.value,
+            currentTrickSuit=(c_int * 3)(0, 0, 0),
+            currentTrickRank=(c_int * 3)(0, 0, 0),
+        )
         # bit #i (2 ≤ i ≤ 14) is set if card of rank i (A = 14) is held
         for seat, hand in enumerate(deal):
             for suit, holding in enumerate(hand):
                 self.remainCards[seat][suit] = sum(
-                    1 << convert_rank(rank) for rank in holding)
+                    1 << convert_rank(rank) for rank in holding
+                )
         return self
 
 
@@ -60,24 +61,29 @@ class DealPBN(Structure):
 
     @classmethod
     def from_deal(cls, deal, strain, leader):
-        return cls(trump=to_c_strain(strain),
-                   first=leader.value,
-                   currentTrickSuit=(c_int * 3)(0, 0, 0),
-                   currentTrickRank=(c_int * 3)(0, 0, 0),
-                   remainCards=b"N:" + " ".join(
-                       ".".join(str(holding) for holding in hand)
-                       for hand in deal).encode("ascii"))
+        return cls(
+            trump=to_c_strain(strain),
+            first=leader.value,
+            currentTrickSuit=(c_int * 3)(0, 0, 0),
+            currentTrickRank=(c_int * 3)(0, 0, 0),
+            remainCards=b"N:"
+            + " ".join(
+                ".".join(str(holding) for holding in hand) for hand in deal
+            ).encode("ascii"),
+        )
 
 
 class FutureTricks(Structure):
     """The futureTricks struct."""
 
-    _fields_ = [("nodes", c_int),
-                ("cards", c_int),
-                ("suit", c_int * 13),
-                ("rank", c_int * 13),
-                ("equals", c_int * 13),
-                ("score", c_int * 13)]
+    _fields_ = [
+        ("nodes", c_int),
+        ("cards", c_int),
+        ("suit", c_int * 13),
+        ("rank", c_int * 13),
+        ("equals", c_int * 13),
+        ("score", c_int * 13),
+    ]
 
 
 SolveBoardStatus = {
@@ -95,7 +101,7 @@ SolveBoardStatus = {
     -13: "Card played in current trick is also remaining",
     -14: "Wrong number of remaining cards in a hand",
     -15: "threadIndex < 0 or >=noOfThreads, noOfThreads is the configured "
-         "maximum number of threads",
+    "maximum number of threads",
 }
 
 
@@ -104,8 +110,11 @@ def _solve_board(deal, strain, leader, target, sol, mode):
     futp = FutureTricks()
     status = dll.SolveBoard(c_deal, target, sol, mode, byref(futp), 0)
     if status != 1:
-        raise Exception("SolveBoard({}, ...) failed with status {} ({}).".
-                        format(deal, status, SolveBoardStatus[status]))
+        raise Exception(
+            "SolveBoard({}, ...) failed with status {} ({}).".format(
+                deal, status, SolveBoardStatus[status]
+            )
+        )
     return futp
 
 
@@ -127,8 +136,11 @@ def solve_pbn(deal, strain, declarer):
     futp = FutureTricks()
     status = dll.SolveBoardPBN(c_deal_pbn, -1, 1, 1, byref(futp), 0)
     if status != 1:
-        raise Exception("SolveBoardPBN({}, ...) failed with status {} ({}).".
-                        format(deal, status, SolveBoardStatus[status]))
+        raise Exception(
+            "SolveBoardPBN({}, ...) failed with status {} ({}).".format(
+                deal, status, SolveBoardStatus[status]
+            )
+        )
     best_score = len(Rank) - futp.score[0]
     return best_score
 
@@ -137,8 +149,10 @@ def valid_cards(deal, strain, leader):
     """Return all cards that can be played."""
     _check_dll("valid_cards")
     futp = _solve_board(deal, Strain[strain], Seat[leader], 0, 2, 1)
-    return [Card(to_suit(futp.suit[i]), convert_rank(futp.rank[i]))
-            for i in range(futp.cards)]
+    return [
+        Card(to_suit(futp.suit[i]), convert_rank(futp.rank[i]))
+        for i in range(futp.cards)
+    ]
 
 
 def solve_all(deal, strain, leader):
@@ -147,8 +161,10 @@ def solve_all(deal, strain, leader):
     """
     _check_dll("solve_all")
     futp = _solve_board(deal, Strain[strain], Seat[leader], -1, 3, 1)
-    return {Card(to_suit(futp.suit[i]), convert_rank(futp.rank[i])):
-            futp.score[i] for i in range(futp.cards)}
+    return {
+        Card(to_suit(futp.suit[i]), convert_rank(futp.rank[i])): futp.score[i]
+        for i in range(futp.cards)
+    }
 
 
 dll_name = DLL = None
@@ -160,21 +176,27 @@ elif os.name == "nt":
     DLL = ctypes.WinDLL
 
 if dll_name:
-    dll_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            dll_name)
+    dll_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), dll_name)
 
 if dll_name and os.path.exists(dll_path):
     dll = DLL(dll_path)
-    dll.SolveBoard.argtypes = [
-        Deal, c_int, c_int, c_int, POINTER(FutureTricks), c_int]
+    dll.SolveBoard.argtypes = [Deal, c_int, c_int, c_int, POINTER(FutureTricks), c_int]
     dll.SolveBoardPBN.argtypes = [
-        DealPBN, c_int, c_int, c_int, POINTER(FutureTricks), c_int]
+        DealPBN,
+        c_int,
+        c_int,
+        c_int,
+        POINTER(FutureTricks),
+        c_int,
+    ]
     if os.name == "posix":
         dll.SetMaxThreads(0)
 
     def _check_dll(name):
         return
 
+
 else:
+
     def _check_dll(name):
         raise Exception(f"Unable to load DDS; {name} is not available")

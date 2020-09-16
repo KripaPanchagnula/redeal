@@ -4,7 +4,7 @@ import inspect
 import random
 import runpy
 
-#from . import global_defs, redeal, util
+# from . import global_defs, redeal, util
 import global_defs
 import redeal
 import util
@@ -12,66 +12,63 @@ import util
 
 class Main:
     parser = argparse.ArgumentParser(
-        description="A reimplementation of Thomas Andrews' Deal in Python.")
+        description="A reimplementation of Thomas Andrews' Deal in Python."
+    )
+    parser.add_argument("--gui", action="store_true", help="start the GUI")
     parser.add_argument(
-        "--gui", action="store_true",
-        help="start the GUI")
+        "-n", type=int, default=10, help="the number of requested deals"
+    )
     parser.add_argument(
-        "-n", type=int, default=10,
-        help="the number of requested deals")
+        "--max", type=int, help="the maximum number of tries (defaults to 1000*n)"
+    )
     parser.add_argument(
-        "--max", type=int,
-        help="the maximum number of tries (defaults to 1000*n)")
+        "-f",
+        "--format",
+        choices=["short", "long", "pbn"],
+        default="short",
+        help="set diagram print style",
+    )
     parser.add_argument(
-        "-f", "--format", choices=["short", "long", "pbn"],
-        default="short", help="set diagram print style")
-    parser.add_argument(
-        "-o", "--only",
+        "-o",
+        "--only",
         default="".join(seat.name for seat in global_defs.Seat),
-        help="hands to print")
-    parser.add_argument(
-        "-v", "--verbose", action="store_true",
-        help="be verbose")
-    parser.add_argument(
-        "--seed", type=int,
-        help="random number generator seed")
-    parser.add_argument(
-        "script", nargs="?",
-        help="path to script")
+        help="hands to print",
+    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="be verbose")
+    parser.add_argument("--seed", type=int, help="random number generator seed")
+    parser.add_argument("script", nargs="?", help="path to script")
     override = parser.add_argument_group(
         "arguments overriding values given in script",
-        argument_default=argparse.SUPPRESS)
+        argument_default=argparse.SUPPRESS,
+    )
+    override.add_argument("-N", help="predealt North hand as a string")
+    override.add_argument("-E", help="predealt East hand as a string")
+    override.add_argument("-S", help="predealt West hand as a string")
+    override.add_argument("-W", help="predealt South hand as a string")
     override.add_argument(
-        "-N",
-        help="predealt North hand as a string")
+        "--initial", help='body of "initial" function: "def initial(self): <INITIAL>"'
+    )
     override.add_argument(
-        "-E",
-        help="predealt East hand as a string")
+        "--accept", help='body of "accept" function: "def accept(self, deal): <ACCEPT>"'
+    )
     override.add_argument(
-        "-S",
-        help="predealt West hand as a string")
+        "--do", help='body of "do" function: "def do(self, deal): <ACCEPT>"'
+    )
     override.add_argument(
-        "-W",
-        help="predealt South hand as a string")
-    override.add_argument(
-        "--initial",
-        help='body of "initial" function: "def initial(self): <INITIAL>"')
-    override.add_argument(
-        "--accept",
-        help='body of "accept" function: "def accept(self, deal): <ACCEPT>"')
-    override.add_argument(
-        "--do",
-        help='body of "do" function: "def do(self, deal): <ACCEPT>"')
-    override.add_argument(
-        "--final",
-        help='body of "final" function: "def final(self, n_tries): <FINAL>"')
+        "--final", help='body of "final" function: "def final(self, n_tries): <FINAL>"'
+    )
 
     func_defaults = [
-        (func.__name__,
-         str(inspect.signature(func)),
-         inspect.getsource(func).split("\n", 1)[1].lstrip())
-        for func in (getattr(redeal.Simulation, fname)
-                     for fname in ("initial", "accept", "do", "final"))]
+        (
+            func.__name__,
+            str(inspect.signature(func)),
+            inspect.getsource(func).split("\n", 1)[1].lstrip(),
+        )
+        for func in (
+            getattr(redeal.Simulation, fname)
+            for fname in ("initial", "accept", "do", "final")
+        )
+    ]
 
     def __init__(self):
         self.stop_flag = False
@@ -90,10 +87,12 @@ class Main:
 
         self.given_funcs = [
             (name, signature_str, self.verbose_get(name, body))
-            for name, signature_str, body in self.func_defaults]
+            for name, signature_str, body in self.func_defaults
+        ]
         self.predeal = {
             global_defs.Seat[seat_name]: hand
-            for seat_name, hand in self.verbose_get("predeal", {}).items()}
+            for seat_name, hand in self.verbose_get("predeal", {}).items()
+        }
         for seat in global_defs.Seat:
             try:
                 hand = getattr(self.args, seat.name)
@@ -142,8 +141,7 @@ class Main:
                 found += 1
                 simulation.do(deal)
                 if self.args.verbose:
-                    progress = ("(hand #{}, found after {} tries)".
-                                format(found, i + 1))
+                    progress = "(hand #{}, found after {} tries)".format(found, i + 1)
                     print(progress, end="\r", flush=True)
                     print(" " * len(progress) + "\b" * len(progress), end="")
             if found >= self.args.n:
@@ -155,19 +153,25 @@ class Main:
         """Start a GUI or run a simulation."""
         if self.args.gui:
             from . import gui  # Not needed otherwise, and absent on CI.
+
             gui.run_gui(self)
         else:
             try:
                 simulation = self.verbose_get("simulation")
             except LookupError:
                 simulation = type(
-                    str(), (redeal.Simulation,),
-                    {name: util.create_func(redeal, name, signature_str, body)
-                     for name, signature_str, body in self.given_funcs})()
+                    str(),
+                    (redeal.Simulation,),
+                    {
+                        name: util.create_func(redeal, name, signature_str, body)
+                        for name, signature_str, body in self.given_funcs
+                    },
+                )()
             redeal.Hand.set_str_style(self.args.format)
             redeal.Deal.set_str_style(self.args.format)
             redeal.Deal.set_print_only(
-                [global_defs.Seat[seat] for seat in self.args.only])
+                [global_defs.Seat[seat] for seat in self.args.only]
+            )
             self.generate(simulation)
 
 

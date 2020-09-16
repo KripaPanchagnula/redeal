@@ -10,6 +10,7 @@ import statistics
 try:
     import colorama
     from colorama import Fore, Style
+
     colorama.init()
     BRIGHT_GREEN = Style.BRIGHT + Fore.GREEN
     BRIGHT_RED = Style.BRIGHT + Fore.RED
@@ -17,19 +18,41 @@ try:
 except ImportError:
     BRIGHT_GREEN = BRIGHT_RED = RESET_ALL = ""
 
-#from . import dds, util
-#from .global_defs import Card, Rank, Seat, Strain, Suit, FULL_DECK
-#from .smartstack import SmartStack
+# from . import dds, util
+# from .global_defs import Card, Rank, Seat, Strain, Suit, FULL_DECK
+# from .smartstack import SmartStack
 import dds, util
 from global_defs import Card, Rank, Seat, Strain, Suit, FULL_DECK
 from smartstack import SmartStack
 
-__all__ = ["Shape", "balanced", "semibalanced",
-           "Evaluator", "hcp", "qp", "controls",
-           "Rank", "A", "K", "Q", "J", "T",
-           "Card", "Holding", "Hand", "H", "Deal", "SmartStack",
-           "Contract", "C", "matchpoints", "imps", "Payoff",
-           "Simulation", "OpeningLeadSim"]
+__all__ = [
+    "Shape",
+    "balanced",
+    "semibalanced",
+    "Evaluator",
+    "hcp",
+    "qp",
+    "controls",
+    "Rank",
+    "A",
+    "K",
+    "Q",
+    "J",
+    "T",
+    "Card",
+    "Holding",
+    "Hand",
+    "H",
+    "Deal",
+    "SmartStack",
+    "Contract",
+    "C",
+    "matchpoints",
+    "imps",
+    "Payoff",
+    "Simulation",
+    "OpeningLeadSim",
+]
 
 
 for card in FULL_DECK:
@@ -124,8 +147,7 @@ class Shape:
             for i, l in enumerate(shape):
                 if l == -1:
                     for ll in range(len(Rank) - pre_set + 1):
-                        self._insert1(shape[:i] + (ll,) + shape[i+1:],
-                                      safe=False)
+                        self._insert1(shape[:i] + (ll,) + shape[i + 1 :], safe=False)
 
     def insert(self, it, acc=()):
         """Insert an element, possibly with "()" or "x" terms."""
@@ -137,7 +159,7 @@ class Shape:
                 closing = it.index(")")
             except ValueError:
                 raise Exception("Unbalanced parentheses.")
-            head, it = it[1:closing], it[closing+1:]
+            head, it = it[1:closing], it[closing + 1 :]
         else:
             head, it = it[0:1], it[1:]
         for perm in permutations(head):
@@ -158,10 +180,8 @@ class Shape:
         except KeyError:
             table = array("b")
             table.fromlist([x or y for x, y in zip(self.table, other.table)])
-            min_ls = [min(self.min_ls[suit], other.min_ls[suit])
-                      for suit in Suit]
-            max_ls = [max(self.max_ls[suit], other.max_ls[suit])
-                      for suit in Suit]
+            min_ls = [min(self.min_ls[suit], other.min_ls[suit]) for suit in Suit]
+            max_ls = [max(self.max_ls[suit], other.max_ls[suit]) for suit in Suit]
             result = Shape.from_table(table, (min_ls, max_ls))
             self._op_cache["+", other] = result
             return result
@@ -172,8 +192,7 @@ class Shape:
             return self._op_cache["-", other]
         except KeyError:
             table = array("b")
-            table.fromlist(
-                [x and not y for x, y in zip(self.table, other.table)])
+            table.fromlist([x and not y for x, y in zip(self.table, other.table)])
             result = Shape.from_table(table, (self.min_ls, self.max_ls))
             self._op_cache["-", other] = result
             return result
@@ -242,8 +261,7 @@ class Deal(tuple):
                 dealer[seat] = pre.cards
         if predeal:
             raise Exception(f"Unused predeal entries: {predeal}")
-        predealt = [card for hand_cards in dealer.values()
-                    for card in hand_cards()]
+        predealt = [card for hand_cards in dealer.values() for card in hand_cards()]
         if max(Counter(predealt).values(), default=0) > 1:
             raise Exception("Same card dealt twice.")
         if seat_smartstack:
@@ -296,10 +314,14 @@ class Deal(tuple):
         if Seat.N in self._print_only:
             for line in self.north._long_str().split("\n"):
                 s += " " * 7 + line + "\n"
-        for line_w, line_e in zip(self.west._long_str().split("\n"),
-                                  self.east._long_str().split("\n")):
-            s += ((line_w if Seat.W in self._print_only else "").ljust(14) +
-                  (line_e if Seat.E in self._print_only else "") + "\n")
+        for line_w, line_e in zip(
+            self.west._long_str().split("\n"), self.east._long_str().split("\n")
+        ):
+            s += (
+                (line_w if Seat.W in self._print_only else "").ljust(14)
+                + (line_e if Seat.E in self._print_only else "")
+                + "\n"
+            )
         if Seat.S in self._print_only:
             for line in self.south._long_str().split("\n"):
                 s += " " * 7 + line + "\n"
@@ -309,8 +331,11 @@ class Deal(tuple):
         """Return the deal in PBN format."""
         return '[Deal "{.name[0]}:{}"]'.format(
             Seat(0),
-            " ".join(hand._pbn_str() if seat in self._print_only else "-"
-                     for seat, hand in zip(Seat, self)))
+            " ".join(
+                hand._pbn_str() if seat in self._print_only else "-"
+                for seat, hand in zip(Seat, self)
+            ),
+        )
 
     __str__ = _short_str
     _print_only = Seat
@@ -318,9 +343,11 @@ class Deal(tuple):
     @classmethod
     def set_str_style(cls, style):
         """Set output style (one of "short", "long" or "pbn")."""
-        cls.__str__ = {"short": cls._short_str,
-                       "long": cls._long_str,
-                       "pbn": cls._pbn_str}[style]
+        cls.__str__ = {
+            "short": cls._short_str,
+            "long": cls._long_str,
+            "pbn": cls._pbn_str,
+        }[style]
 
     @classmethod
     def set_print_only(cls, hands):
@@ -337,14 +364,14 @@ class Deal(tuple):
         strain = Contract.from_str(contract_declarer[:-1]).strain
         declarer = contract_declarer[-1]
         if (strain, declarer) not in self._dd_cache:
-            self._dd_cache[strain, declarer] = \
-                dds.solve(self, strain, declarer)
+            self._dd_cache[strain, declarer] = dds.solve(self, strain, declarer)
         return self._dd_cache[strain, declarer]
 
     def dd_score(self, contract_declarer, vul=False):
         """Compute declarer's double-dummy score in a contract."""
         return Contract.from_str(contract_declarer[:-1], vul=vul).score(
-            self.dd_tricks(contract_declarer))
+            self.dd_tricks(contract_declarer)
+        )
 
     def dd_all_tricks(self, strain, leader):
         """Compute declarer's number of double dummy tricks for all leads."""
@@ -370,8 +397,11 @@ class Hand(tuple):
         if len(suits) != len(Suit):
             raise Exception("Invalid initializer for Hand.")
         try:
-            cards = [Card(suit=suit, rank=Rank[rank])
-                     for suit, holding in zip(Suit, suits) for rank in holding]
+            cards = [
+                Card(suit=suit, rank=Rank[rank])
+                for suit, holding in zip(Suit, suits)
+                for rank in holding
+            ]
         except KeyError:
             raise Exception("Invalid initializer for Hand.")
         return cls(cards)
@@ -397,9 +427,11 @@ class Hand(tuple):
     @classmethod
     def set_str_style(cls, style):
         """Set output style (one of "short", "long" or "pbn")."""
-        cls.__str__ = {"short": cls._short_str,
-                       "long": cls._long_str,
-                       "pbn": cls._pbn_str}[style]
+        cls.__str__ = {
+            "short": cls._short_str,
+            "long": cls._long_str,
+            "pbn": cls._pbn_str,
+        }[style]
 
     def cards(self):
         """Return ``self`` as a list of card objects."""
@@ -412,25 +444,26 @@ class Hand(tuple):
         else:
             return tuple.__contains__(self, other)
 
-    spades = util.reify(
-        itemgetter(Suit.S), "The hand's spades.", "spades")
-    hearts = util.reify(
-        itemgetter(Suit.H), "The hand's hearts.", "hearts")
-    diamonds = util.reify(
-        itemgetter(Suit.D), "The hand's diamonds.", "diamonds")
-    clubs = util.reify(
-        itemgetter(Suit.C), "The hand's clubs.", "clubs")
+    spades = util.reify(itemgetter(Suit.S), "The hand's spades.", "spades")
+    hearts = util.reify(itemgetter(Suit.H), "The hand's hearts.", "hearts")
+    diamonds = util.reify(itemgetter(Suit.D), "The hand's diamonds.", "diamonds")
+    clubs = util.reify(itemgetter(Suit.C), "The hand's clubs.", "clubs")
 
-    shape = util.reify(lambda self: tuple(len(holding) for holding in self),
-                       "The hand's shape.")
-    hcp = util.reify(lambda self: sum(holding.hcp for holding in self),
-                     "The hand's HCP count.")
-    qp = util.reify(lambda self: sum(holding.qp for holding in self),
-                    "The hand's QP count.")
-    losers = util.reify(lambda self: sum(holding.losers for holding in self),
-                        "The hand's loser count.")
-    pt = util.reify(lambda self: sum(holding.pt for holding in self),
-                    "The hand's playing tricks.")
+    shape = util.reify(
+        lambda self: tuple(len(holding) for holding in self), "The hand's shape."
+    )
+    hcp = util.reify(
+        lambda self: sum(holding.hcp for holding in self), "The hand's HCP count."
+    )
+    qp = util.reify(
+        lambda self: sum(holding.qp for holding in self), "The hand's QP count."
+    )
+    losers = util.reify(
+        lambda self: sum(holding.losers for holding in self), "The hand's loser count."
+    )
+    pt = util.reify(
+        lambda self: sum(holding.pt for holding in self), "The hand's playing tricks."
+    )
 
     @util.reify
     def freakness(self):
@@ -439,8 +472,9 @@ class Hand(tuple):
 
         __ http://www.rpbridge.net/8j17.htm#8
         """
-        return (sum(max(l - 4, 3 - l) for l in map(len, self))
-                + {0: 2, 1: 1}.get(min(map(len, self)), 0))
+        return sum(max(l - 4, 3 - l) for l in map(len, self)) + {0: 2, 1: 1}.get(
+            min(map(len, self)), 0
+        )
 
 
 A, K, Q, J, T = (Rank[rank] for rank in "AKQJT")
@@ -472,8 +506,7 @@ class Holding(frozenset):
         if len(self) >= 3:
             if not any(rank == Q for rank in self):
                 losers += 1
-            elif (losers == 2 and
-                  not any(rank in [J, T] for rank in self)):
+            elif losers == 2 and not any(rank in [J, T] for rank in self):
                 losers += 0.5
         return losers
 
@@ -499,16 +532,19 @@ class Holding(frozenset):
             return 1 + len_pt
         if {K, T} <= self or {Q, J} <= self and len(self) >= 3:
             return 1 + len_pt
-        if ({K} <= self and len(self) >= 2 or
-                ({Q} <= self or {J, T} in self) and len(self) >= 3):
-            return .5 + len_pt
+        if (
+            {K} <= self
+            and len(self) >= 2
+            or ({Q} <= self or {J, T} in self)
+            and len(self) >= 3
+        ):
+            return 0.5 + len_pt
         return len_pt
 
 
 class Contract:
     def __init__(self, level, strain, doubled=0, vul=False):
-        if not (1 <= level <= 7 and hasattr(Strain, strain) and
-                0 <= doubled <= 2):
+        if not (1 <= level <= 7 and hasattr(Strain, strain) and 0 <= doubled <= 2):
             raise ValueError("Invalid contract")
         self.level = level
         self.strain = strain
@@ -578,8 +614,31 @@ def matchpoints(my, other):
 def imps(my, other):
     """Return IMPs scored given our and their results."""
     imp_table = [
-        15, 45, 85, 125, 165, 215, 265, 315, 365, 425, 495, 595, 745, 895,
-        1095, 1295, 1495, 1745, 1995, 2245, 2495, 2995, 3495, 3995]
+        15,
+        45,
+        85,
+        125,
+        165,
+        215,
+        265,
+        315,
+        365,
+        425,
+        495,
+        595,
+        745,
+        895,
+        1095,
+        1295,
+        1495,
+        1745,
+        1995,
+        2245,
+        2495,
+        2995,
+        3495,
+        3995,
+    ]
     return bisect(imp_table, abs(my - other)) * (1 if my > other else -1)
 
 
@@ -605,15 +664,16 @@ class OpeningLeadSim(Simulation):
         self.leader = (Seat[contract_declarer[-1]] + 1).name
         contract = Contract.from_str(contract_declarer[:-1])
         self.strain = contract.strain
-        self.scoring = lambda ti, tj: -scoring(contract.score(len(Rank) - ti),
-                                               contract.score(len(Rank) - tj))
+        self.scoring = lambda ti, tj: -scoring(
+            contract.score(len(Rank) - ti), contract.score(len(Rank) - tj)
+        )
 
     def initial(self, dealer):
         deal = next(filter(self.accept, iter(dealer, None)))
         self.payoff = Payoff(
-            sorted(dds.valid_cards(deal, self.strain, self.leader),
-                   reverse=True),
-            self.scoring)
+            sorted(dds.valid_cards(deal, self.strain, self.leader), reverse=True),
+            self.scoring,
+        )
 
     def do(self, deal):
         self.payoff.add_data(deal.dd_all_tricks(self.strain, self.leader))
@@ -637,28 +697,45 @@ class Payoff:
         """Add a realization of the scores as a strategy -> raw scores dict."""
         for i, ei in enumerate(self.entries):
             for j, ej in enumerate(self.entries):
-                self.table[i][j].append(
-                    self.diff(raw_scores[ei], raw_scores[ej]))
+                self.table[i][j].append(self.diff(raw_scores[ei], raw_scores[ej]))
 
     def report(self):
         """Pretty-print a payoff table."""
-        means_stderrs = [[(statistics.mean(score),
-                           statistics.stdev(score) / len(score) ** (1/2))
-                          for score in line]
-                         for line in self.table]
-        print(
-            "\t" + "".join(f"{entry:.7}\t" for entry in self.entries))
+        means_stderrs = [
+            [
+                (
+                    statistics.mean(score),
+                    statistics.stdev(score) / len(score) ** (1 / 2),
+                )
+                for score in line
+            ]
+            for line in self.table
+        ]
+        print("\t" + "".join(f"{entry:.7}\t" for entry in self.entries))
         for i, (entry, line) in enumerate(zip(self.entries, means_stderrs)):
-            print(f"{entry:.7}",
-                  *("{}{:+.2f}{}".format(
-                      BRIGHT_GREEN if mean > stderr
-                      else BRIGHT_RED if mean < -stderr
-                      else "",
-                      mean, RESET_ALL)
-                    if i != j else ""
-                    for j, (mean, stderr) in enumerate(line)),
-                  sep="\t")
-            print("",
-                  *(f"({stderr:.2f})" if i != j else ""
-                    for j, (mean, stderr) in enumerate(line)),
-                  sep="\t")
+            print(
+                f"{entry:.7}",
+                *(
+                    "{}{:+.2f}{}".format(
+                        BRIGHT_GREEN
+                        if mean > stderr
+                        else BRIGHT_RED
+                        if mean < -stderr
+                        else "",
+                        mean,
+                        RESET_ALL,
+                    )
+                    if i != j
+                    else ""
+                    for j, (mean, stderr) in enumerate(line)
+                ),
+                sep="\t",
+            )
+            print(
+                "",
+                *(
+                    f"({stderr:.2f})" if i != j else ""
+                    for j, (mean, stderr) in enumerate(line)
+                ),
+                sep="\t",
+            )

@@ -45,7 +45,10 @@ def do(deal):
 
 def final(n_tries):
     for line in TABLE:
-        print("\t".join(str(sum(list(counter.elements())) /
-                            len(list(counter.elements())))
-                        for counter in line))
+        print(
+            "\t".join(
+                str(sum(list(counter.elements())) / len(list(counter.elements())))
+                for counter in line
+            )
+        )
     print(f"Tries: {n_tries}")

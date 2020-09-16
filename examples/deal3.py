@@ -16,7 +16,13 @@ from redeal import *
 
 predeal = {"S": "764 J4 J753 AQJ2"}
 
+
 def accept(deal):
-    return (16 <= deal.west.hcp <= 19 and deal.west.shape in Shape("5(332)")
-            and 6 <= deal.east.hcp <= 11 and deal.east.losers >= 3
-            and len(deal.east.hearts) <= 4 and len(deal.east.spades) <= 2)
+    return (
+        16 <= deal.west.hcp <= 19
+        and deal.west.shape in Shape("5(332)")
+        and 6 <= deal.east.hcp <= 11
+        and deal.east.losers >= 3
+        and len(deal.east.hearts) <= 4
+        and len(deal.east.spades) <= 2
+    )

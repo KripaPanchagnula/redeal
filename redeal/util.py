@@ -11,13 +11,13 @@ def create_func(module, name, signature_str, body):
         else:
             return staticmethod(body)
     defs = "def {name}{spec}:\n{body}".format(
-        name=name,
-        spec=signature_str,
-        body=textwrap.indent(body, "    "))
+        name=name, spec=signature_str, body=textwrap.indent(body, "    ")
+    )
     if module not in create_func.globals:
         # This allows us to share globals between callbacks.
         create_func.globals[module] = {
-            name: getattr(module, name) for name in dir(module)}
+            name: getattr(module, name) for name in dir(module)
+        }
     d = {}
     try:
         exec(defs, create_func.globals[module], d)
@@ -35,8 +35,7 @@ class reify:
 
     def __init__(self, wrapped, doc=None, name=None):
         self.wrapped = wrapped
-        self.__doc__ = (doc if doc is not None
-                        else getattr(wrapped, "__doc__", None))
+        self.__doc__ = doc if doc is not None else getattr(wrapped, "__doc__", None)
         self.name = name if name is not None else wrapped.__name__
 
     def __get__(self, inst, owner):

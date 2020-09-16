@@ -5,11 +5,11 @@ import sys
 
 
 Seat = Enum("Seat", zip("NESW", range(4)))
-Seat.N._s, Seat.E._s, Seat.S._s, Seat.W._s = (
-    "North", "East", "South", "West")
+Seat.N._s, Seat.E._s, Seat.S._s, Seat.W._s = ("North", "East", "South", "West")
 Seat.__str__ = lambda self: self._s
 Seat.__index__ = lambda self: self.value
 Seat.__add__ = lambda self, val: Seat((self.value + val) % len(Seat))
+
 
 class Suit(Enum):
     S = 0, " S", "♠"
@@ -19,19 +19,27 @@ class Suit(Enum):
 
     def __init__(self, value, sym, unicode_sym):
         self._value_ = value
-        self._sym = (
-            unicode_sym if sys.stdout.encoding.lower() == "utf-8" else sym)
+        self._sym = unicode_sym if sys.stdout.encoding.lower() == "utf-8" else sym
         self._unicode_sym = unicode_sym
 
     def __str__(self):
         return self._unicode_sym if SUITS_FORCE_UNICODE else self._sym
 
-    def __index__(self): return self.value
+    def __index__(self):
+        return self.value
+
     # Yes, the order is reversed.
-    def __lt__(self, other): return self.value > other.value
-    def __le__(self, other): return self.value >= other.value
-    def __gt__(self, other): return self.value < other.value
-    def __ge__(self, other): return self.value <= other.value
+    def __lt__(self, other):
+        return self.value > other.value
+
+    def __le__(self, other):
+        return self.value >= other.value
+
+    def __gt__(self, other):
+        return self.value < other.value
+
+    def __ge__(self, other):
+        return self.value <= other.value
 
 
 SUITS_FORCE_UNICODE = False
@@ -58,5 +66,4 @@ Card = namedtuple("Card", ["suit", "rank"])
 Card.from_str = lambda s: Card(Suit[s[0]], Rank[s[1]])
 Card.__str__ = lambda self: "{0.suit}{0.rank}".format(self)
 Card.__format__ = lambda self, fmt: format(str(self), fmt)
-FULL_DECK = {Card(suit=suit, rank=rank)
-             for suit, rank in itertools.product(Suit, Rank)}
+FULL_DECK = {Card(suit=suit, rank=rank) for suit, rank in itertools.product(Suit, Rank)}
